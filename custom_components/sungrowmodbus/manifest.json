@@ -5,7 +5,7 @@
     "documentation": "https://www.home-assistant.io/integrations/modbus",
     "issue_tracker": "https://github.com/ryanwinter/Sungrow-Modbus/issues",
     "requirements": [
-        "pymodbus==3.11.2"
+        "pymodbus==3.15.0"
     ],
     "version": "1.0.0"
 }
