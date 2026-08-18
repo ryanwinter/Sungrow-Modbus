@@ -1,73 +1,23 @@
-#logger:
-#  logs:
-#    homeassistant.custom_components.sungrowmodbus: debug
-#    pymodbus: debug
+# address is index from 0, subtract 1 from the published register
 
 sungrowmodbus:
   - name: sungrow_sg8k
-    host: hostname/ip address
-    port: port number
+    host: rakmodule_775DEE.iot.home.arpa
+    port: 502
     timeout: 10
+
     sensors:
-      - name: fault_code
-        slave: 1
-        address: 5044
-        input_type: input
-      - name: total_dc_power
-        slave: 1
-        address: 5016
-        data_type: uint32
-        swap: word
-        input_type: input
-        unit_of_measurement: W
-      - name: daily_power_yields
-        slave: 1
-        address: 5002
-        input_type: input
-        scale: 0.1
-        precision: 2
-        unit_of_measurement: kWh
-      - name: internal_temperature
-        slave: 1
-        address: 5007
-        input_type: input
-        scale: 0.1
-        precision: 2
-        unit_of_measurement: °C
-      - name: daily_running_time
-        slave: 1solar
-        address: 5112
-        input_type: input
-        scale: 1
-        unit_of_measurement: min
-      - name: total_active_power
-        slave: 1
-        data_type: uint32
-        address: 5030
-        swap: word
-        input_type: input
-        unit_of_measurement: W
-      - name: grid_frequency
-        slave: 1
-        address: 5035
-        input_type: input
-        scale: 0.1
-        precision: 2
-        unit_of_measurement: Hz
-      - name: phase_voltage
-        slave: 1
-        input_type: input
-        address: 5018
-        scale: 0.1
-        precision: 2
-        unit_of_measurement: V
-      - name: phase_current
-        slave: 1
-        input_type: input
-        address: 5021
-        scale: 0.1
-        precision: 2
-        unit_of_measurement: A
+      # Solar production
+      # - name: daily_power_yields
+      #   slave: 1
+      #   data_type: uint16
+      #   address: 5002
+      #   input_type: input
+      #   scale: 0.1
+      #   precision: 2
+      #   unit_of_measurement: kWh
+      #   device_class: energy
+      #   state_class: total_increasing
       - name: total_power_yields
         slave: 1
         scale: 0.1
@@ -77,52 +27,102 @@ sungrowmodbus:
         address: 5143
         input_type: input
         unit_of_measurement: kWh
-      - name: device_status
-        slave: 1
-        input_type: input
-        address: 5037
-      - name: mppt1_voltage
-        slave: 1
-        input_type: input
-        unit_of_measurement: V
-        address: 5010
-        scale: 0.1
-        precision: 2
-      - name: mppt1_current
-        slave: 1
-        input_type: input
-        unit_of_measurement: A
-        address: 5011
-        scale: 0.1
-        precision: 2
-      - name: mppt2_voltage
-        slave: 1
-        input_type: input
-        unit_of_measurement: V
-        address: 5012
-        scale: 0.1
-        precision: 2
-      - name: mppt2_current
-        slave: 1
-        input_type: input
-        unit_of_measurement: A
-        address: 5013
-        scale: 0.1
-        precision: 2
-      - name: power_factor
-        slave: 1
-        input_type: input
-        address: 5034
-        scale: 0.001
-        precision: 4
+        device_class: energy
+        state_class: total_increasing
 
-utility_meter:
-  daily_pv_yields:
-    source: sensor.total_power_yields
-    cycle: daily
-  monthly_pv_yields:
-    source: sensor.total_power_yields
-    cycle: monthly
-  yearly_pv_yields:
-    source: sensor.total_power_yields
-    cycle: yearly
+      - name: total_active_power
+        slave: 1
+        data_type: uint32
+        address: 5030
+        swap: word
+        input_type: input
+        unit_of_measurement: W
+        device_class: power
+        state_class: total_increasing
+
+      # Grid
+      - name: grid_frequency
+        slave: 1
+        data_type: uint16
+        address: 5148
+        input_type: input
+        scale: 0.1
+        precision: 2
+        unit_of_measurement: Hz
+        device_class: frequency
+        state_class: measurement
+
+      # Grid export
+      # - name: daily_export_energy
+      #   slave: 1
+      #   scale: 0.1
+      #   precision: 2
+      #   data_type: uint32
+      #   swap: word
+      #   address: 5092
+      #   input_type: input
+      #   unit_of_measurement: kWh
+      #   device_class: energy
+      #   state_class: total_increasing
+
+      - name: total_export_energy
+        slave: 1
+        scale: 0.1
+        precision: 2
+        data_type: uint32
+        swap: word
+        address: 5094
+        input_type: input
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total_increasing
+
+      # Grid import
+      # - name: daily_import_energy
+      #   slave: 1
+      #   scale: 0.1
+      #   precision: 2
+      #   data_type: uint32
+      #   swap: word
+      #   address: 5096
+      #   input_type: input
+      #   unit_of_measurement: kWh
+      #   device_class: energy
+      #   state_class: total_increasing
+
+      - name: total_import_energy
+        slave: 1
+        scale: 0.1
+        precision: 2
+        data_type: uint32
+        swap: word
+        address: 5098
+        input_type: input
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total_increasing
+
+      # Consumption
+      # - name: daily_direct_energy_consumption
+      #   slave: 1
+      #   scale: 0.1
+      #   precision: 2
+      #   data_type: uint32
+      #   swap: word
+      #   address: 5100
+      #   input_type: input
+      #   unit_of_measurement: kWh
+      #   device_class: energy
+      #   state_class: total_increasing
+
+      - name: total_direct_energy_consumption
+        slave: 1
+        scale: 0.1
+        precision: 2
+        data_type: uint32
+        swap: word
+        address: 5102
+        input_type: input
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total_increasing
