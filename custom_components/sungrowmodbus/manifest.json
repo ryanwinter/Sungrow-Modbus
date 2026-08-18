@@ -2,13 +2,11 @@
     "domain": "sungrowmodbus",
     "name": "Sungrow Modbus",
     "codeowners": ["@ryanwinter"],
-    "dependencies": [],
+    "dependencies": [ "modbus"],
     "documentation": "https://github.com/ryanwinter/Sungrow-Modbus",
     "issue_tracker": "https://github.com/ryanwinter/Sungrow-Modbus/issues",
     "integration_type": "hub",
     "iot_class": "local_polling",
-    "requirements": [
-        "pymodbus==3.15.0"
-    ],
+    "requirements": [],
     "version": "1.0.1"
 }
