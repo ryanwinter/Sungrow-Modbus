@@ -2,14 +2,39 @@
 
 sungrowmodbus:
   - name: sungrow_sg8k
-    host: rakmodule_775DEE.iot.home.arpa
+    host: 10.0.12.172
     port: 502
-    timeout: 10
+    delay: 15
+    timeout: 30
 
     sensors:
+      # Info
+      - name: serial_number
+        address: 4989 # reg 4990
+        data_type: string
+        count: 10
+        input_type: input
+        scan_interval: &scan_interval_slow 600
+
+      - name: device_type_code
+        address: 4999 # reg 5000
+        data_type: uint16
+        input_type: input
+        scan_interval: *scan_interval_slow
+
+      - name: inverter_temperature
+        address: 5007 # reg 5008
+        data_type: int16
+        input_type: input
+        scale: 1
+        precision: 0
+        unit_of_measurement: °C
+        device_class: temperature
+        state_class: measurement
+        scan_interval: &scan_interval_medium 60
+
       # Solar production
       # - name: daily_power_yields
-      #   slave: 1
       #   data_type: uint16
       #   address: 5002
       #   input_type: input
@@ -18,43 +43,45 @@ sungrowmodbus:
       #   unit_of_measurement: kWh
       #   device_class: energy
       #   state_class: total_increasing
+
       - name: total_power_yields
-        slave: 1
-        scale: 0.1
-        precision: 2
+        address: 5143 # reg 5144
         data_type: uint32
         swap: word
-        address: 5143
         input_type: input
+        scale: 0.1
+        precision: 1
         unit_of_measurement: kWh
         device_class: energy
         state_class: total_increasing
+        scan_interval: &scan_interval_fast 30
 
       - name: total_active_power
-        slave: 1
+        address: 5030 # reg 5031
         data_type: uint32
-        address: 5030
         swap: word
         input_type: input
+        scale: 1
+        precision: 0
         unit_of_measurement: W
         device_class: power
         state_class: total_increasing
+        scan_interval: *scan_interval_fast
 
       # Grid
       - name: grid_frequency
-        slave: 1
+        address: 5147 # reg 5148
         data_type: uint16
-        address: 5148
         input_type: input
-        scale: 0.1
+        scale: 0.01
         precision: 2
         unit_of_measurement: Hz
         device_class: frequency
         state_class: measurement
+        scan_interval: *scan_interval_fast
 
       # Grid export
       # - name: daily_export_energy
-      #   slave: 1
       #   scale: 0.1
       #   precision: 2
       #   data_type: uint32
@@ -66,20 +93,19 @@ sungrowmodbus:
       #   state_class: total_increasing
 
       - name: total_export_energy
-        slave: 1
-        scale: 0.1
-        precision: 2
+        address: 5094 # reg 5095
         data_type: uint32
         swap: word
-        address: 5094
         input_type: input
+        scale: 0.1
+        precision: 1
         unit_of_measurement: kWh
         device_class: energy
         state_class: total_increasing
+        scan_interval: *scan_interval_fast
 
       # Grid import
       # - name: daily_import_energy
-      #   slave: 1
       #   scale: 0.1
       #   precision: 2
       #   data_type: uint32
@@ -91,20 +117,19 @@ sungrowmodbus:
       #   state_class: total_increasing
 
       - name: total_import_energy
-        slave: 1
-        scale: 0.1
-        precision: 2
+        address: 5098 # reg 5099
         data_type: uint32
         swap: word
-        address: 5098
         input_type: input
+        scale: 0.1
+        precision: 1
         unit_of_measurement: kWh
         device_class: energy
         state_class: total_increasing
+        scan_interval: *scan_interval_fast
 
       # Consumption
       # - name: daily_direct_energy_consumption
-      #   slave: 1
       #   scale: 0.1
       #   precision: 2
       #   data_type: uint32
@@ -116,13 +141,13 @@ sungrowmodbus:
       #   state_class: total_increasing
 
       - name: total_direct_energy_consumption
-        slave: 1
-        scale: 0.1
-        precision: 2
+        address: 5102 # reg 5103
         data_type: uint32
         swap: word
-        address: 5102
         input_type: input
+        scale: 0.1
+        precision: 1
         unit_of_measurement: kWh
         device_class: energy
         state_class: total_increasing
+        scan_interval: *scan_interval_fast
