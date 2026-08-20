@@ -6,7 +6,6 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_SENSORS,
-    CONF_SWITCHES,
     Platform,
 )
 
@@ -109,5 +108,4 @@ ACTIVE_SCAN_INTERVAL = 2  # limit to force an extra update
 PLATFORMS = (
     (Platform.BINARY_SENSOR, CONF_BINARY_SENSORS),
     (Platform.SENSOR, CONF_SENSORS),
-    (Platform.SWITCH, CONF_SWITCHES),
 )
