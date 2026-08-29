@@ -243,7 +243,6 @@ class ModbusHub:
         self.event_connected = asyncio.Event()
         self.hass = hass
         self.name = client_config[CONF_NAME]
-        self._config_type = client_config[CONF_TYPE]
         self.config_delay = client_config[CONF_DELAY]
         self._pb_request: dict[str, RunEntry] = {}
         self._connect_task: asyncio.Task
