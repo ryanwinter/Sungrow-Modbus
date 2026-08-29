@@ -1,6 +1,7 @@
 """Constants used in modbus integration."""
 
 from enum import Enum
+import logging
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -47,6 +48,7 @@ CONF_WRITE_TYPE = "write_type"
 CONF_ZERO_SUPPRESS = "zero_suppress"
 
 SUNGROW = "sungrow"
+DEVICE_ID = "device_id"
 
 
 # service call attributes
@@ -109,3 +111,5 @@ PLATFORMS = (
     (Platform.BINARY_SENSOR, CONF_BINARY_SENSORS),
     (Platform.SENSOR, CONF_SENSORS),
 )
+
+LOGGER = logging.getLogger(__package__)
