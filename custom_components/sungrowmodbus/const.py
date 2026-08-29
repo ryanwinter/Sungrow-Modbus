@@ -104,7 +104,6 @@ DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"
 DEFAULT_TEMP_UNIT = "C"
 MODBUS_DOMAIN = "sungrowmodbus"
-DOMAIN = "sungrowmodbus"
 
 ACTIVE_SCAN_INTERVAL = 2  # limit to force an extra update
 
