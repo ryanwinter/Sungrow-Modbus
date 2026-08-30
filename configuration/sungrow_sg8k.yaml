@@ -65,7 +65,7 @@ sungrowmodbus:
         precision: 0
         unit_of_measurement: W
         device_class: power
-        state_class: total_increasing
+        state_class: measurement
         scan_interval: *scan_interval_fast
 
       # Grid
