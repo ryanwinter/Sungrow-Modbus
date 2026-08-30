@@ -26,7 +26,7 @@ sungrowmodbus:
         address: 5007 # reg 5008
         data_type: int16
         input_type: input
-        scale: 1
+        scale: 0.1
         precision: 0
         unit_of_measurement: °C
         device_class: temperature
