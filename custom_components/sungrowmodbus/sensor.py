@@ -80,6 +80,13 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
 
+        # outlier filtering parameters
+        self.threshold = 3  # Z-score threshold for outlier detection
+        self.alpha = 0.1  # Smoothing factor for Exponential Moving Average
+        self.mean = None
+        self.variance = 0.0
+
+
     async def async_setup_slaves(
         self, hass: HomeAssistant, slave_count: int, entry: dict[str, Any]
     ) -> list[SlaveSensor]:
@@ -145,6 +152,25 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
             self._attr_native_value = result
         self.async_write_ha_state()
 
+    def filter_stream(self, val):
+        if self.mean == None:
+            self.mean = val
+            return val
+
+        std_dev = self.variance ** 0.5
+
+        # Evaluate before updating statistics
+        if std_dev > 0:
+            z_score = abs(val - self.mean) / std_dev
+            if z_score > self.threshold:
+                return None  # Outlier filtered out
+
+        # Update running Exponential Moving Mean and Variance
+        diff = val - self.mean
+        self.mean += self.alpha * diff
+        self.variance = (1 - self.alpha) * (self.variance + self.alpha * diff**2)
+
+        return val
 
 class SlaveSensor(
     CoordinatorEntity[DataUpdateCoordinator[list[float | None] | None]],
