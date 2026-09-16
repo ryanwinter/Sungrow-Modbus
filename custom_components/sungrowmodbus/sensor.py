@@ -131,6 +131,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
             return
         self._attr_available = True
         result = self.unpack_structure_result(raw_result.registers)
+        result = filter_stream(result)
         if self._coordinator:
             result_array: list[float | None] = []
             if result:
