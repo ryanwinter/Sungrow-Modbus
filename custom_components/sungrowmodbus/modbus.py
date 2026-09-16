@@ -332,7 +332,7 @@ class ModbusHub:
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""
         try:
-            self._client = self._pb_class[self._config_type](**self._pb_params)
+            self._client = self._pb_class(**self._pb_params)
         except ModbusException as exception_error:
             self._log_error(str(exception_error))
             return False
