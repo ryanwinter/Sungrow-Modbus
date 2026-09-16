@@ -112,11 +112,11 @@ PB_CALL = [
 ]
 
 
-async def async_modbus_setup(
+async def _async_modbus_setup(
     hass: HomeAssistant,
     config: ConfigType,
 ) -> bool:
-    """Set up Modbus component."""
+    """Set up the Modbus hubs and their platforms."""
 
     if config[DOMAIN]:
         config[DOMAIN] = check_config(hass, config[DOMAIN])
@@ -154,6 +154,7 @@ async def async_modbus_setup(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_modbus)
 
+    # Sungrow services setup (move to services.py)
     def _get_service_call_details(
         service: ServiceCall,
     ) -> tuple[ModbusHub, int, int]:
@@ -225,6 +226,7 @@ async def async_modbus_setup(
         async_stop_hub,
         schema=vol.Schema({vol.Required(ATTR_HUB): cv.string}),
     )
+
     return True
 
 
@@ -261,6 +263,19 @@ class ModbusHub:
         else:
             self._msg_wait = 0
 
+        self.units = sorted(
+            {
+                entity_unit_id(entity_config)
+                for _, conf_key in PLATFORMS
+                for entity_config in client_config.get(conf_key, [])
+            }
+        )
+
+    @property
+    def connected(self) -> bool:
+        """Return whether the client currently holds a link to the device."""
+        return self._client is not None and self._client.connected
+
     def _log_error(self, text: str) -> None:
         if text == self._last_log_error:
             return
@@ -294,7 +309,7 @@ class ModbusHub:
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""
         try:
-            self._client = self._pb_class(**self._pb_params)
+            self._client = self._pb_class[self._config_type](**self._pb_params)
         except ModbusException as exception_error:
             self._log_error(str(exception_error))
             return False
@@ -309,13 +324,6 @@ class ModbusHub:
             self.async_pb_connect(), "modbus-connect"
         )
         return True
-
-    async def async_restart(self) -> None:
-        """Reconnect client."""
-        if self._client:
-            await self.async_close()
-
-        await self.async_setup()
 
     async def async_close(self) -> None:
         """Disconnect client."""
