@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_SLAVE,
     CONF_TIMEOUT,
     EVENT_HOMEASSISTANT_STOP,
 )
