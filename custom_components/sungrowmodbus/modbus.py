@@ -112,6 +112,27 @@ PB_CALL = [
 ]
 
 
+def entity_unit_id(entity_config: dict[str, Any]) -> int:
+    """Return the unit an entity config addresses, defaulting to 1."""
+    if (conf_slave := entity_config.get(CONF_SLAVE)) is not None:
+        return int(conf_slave)
+    return int(entity_config.get(CONF_DEVICE_ADDRESS, 1))
+
+
+async def async_modbus_setup(
+    hass: HomeAssistant,
+    config: ConfigType,
+) -> bool:
+    """Set up Modbus component."""
+    if await _async_modbus_setup(hass, config):
+        return True
+
+    # Hubs are stored as they are created, so a failure part way through leaves
+    # unusable ones behind. Drop them, so their presence means they are usable.
+    hass.data.pop(DATA_MODBUS_HUBS, None)
+    return False
+
+
 async def _async_modbus_setup(
     hass: HomeAssistant,
     config: ConfigType,
