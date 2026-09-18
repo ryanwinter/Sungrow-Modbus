@@ -35,16 +35,16 @@ sungrowmodbus:
         scan_interval: &scan_interval_medium 120
 
       # Solar production
-      - name: daily_power_yields
-        data_type: uint16
-        address: 5002
-        input_type: input
-        scale: 0.1
-        precision: 2
-        unit_of_measurement: kWh
-        device_class: energy
-        state_class: total_increasing
-        scan_interval: *scan_interval_medium
+      # - name: daily_power_yields
+      #   data_type: uint16
+      #   address: 5002
+      #   input_type: input
+      #   scale: 0.1
+      #   precision: 2
+      #   unit_of_measurement: kWh
+      #   device_class: energy
+      #   state_class: total_increasing
+      #   scan_interval: *scan_interval_medium
 
       - name: total_power_yields
         address: 5143 # reg 5144
@@ -80,20 +80,20 @@ sungrowmodbus:
         unit_of_measurement: Hz
         device_class: frequency
         state_class: measurement
-        scan_interval: &scan_interval_slow 600
+        scan_interval: &scan_interval_slow 1200
 
       # Grid export
-      - name: daily_export_energy
-        scale: 0.1
-        precision: 2
-        data_type: uint32
-        swap: word
-        address: 5092
-        input_type: input
-        unit_of_measurement: kWh
-        device_class: energy
-        state_class: total_increasing
-        scan_interval: *scan_interval_medium
+      # - name: daily_export_energy
+      #   scale: 0.1
+      #   precision: 2
+      #   data_type: uint32
+      #   swap: word
+      #   address: 5092
+      #   input_type: input
+      #   unit_of_measurement: kWh
+      #   device_class: energy
+      #   state_class: total_increasing
+      #   scan_interval: *scan_interval_medium
 
       - name: total_export_energy
         address: 5094 # reg 5095
@@ -108,17 +108,17 @@ sungrowmodbus:
         scan_interval: *scan_interval_fast
 
       # Grid import
-      - name: daily_import_energy
-        scale: 0.1
-        precision: 2
-        data_type: uint32
-        swap: word
-        address: 5096
-        input_type: input
-        unit_of_measurement: kWh
-        device_class: energy
-        state_class: total_increasing
-        scan_interval: *scan_interval_medium
+      # - name: daily_import_energy
+      #   scale: 0.1
+      #   precision: 2
+      #   data_type: uint32
+      #   swap: word
+      #   address: 5096
+      #   input_type: input
+      #   unit_of_measurement: kWh
+      #   device_class: energy
+      #   state_class: total_increasing
+      #   scan_interval: *scan_interval_medium
 
       - name: total_import_energy
         address: 5098 # reg 5099
@@ -133,17 +133,17 @@ sungrowmodbus:
         scan_interval: *scan_interval_fast
 
       # Consumption
-      - name: daily_direct_energy_consumption
-        scale: 0.1
-        precision: 2
-        data_type: uint32
-        swap: word
-        address: 5100
-        input_type: input
-        unit_of_measurement: kWh
-        device_class: energy
-        state_class: total_increasing
-        scan_interval: *scan_interval_medium
+      # - name: daily_direct_energy_consumption
+      #   scale: 0.1
+      #   precision: 2
+      #   data_type: uint32
+      #   swap: word
+      #   address: 5100
+      #   input_type: input
+      #   unit_of_measurement: kWh
+      #   device_class: energy
+      #   state_class: total_increasing
+      #   scan_interval: *scan_interval_medium
 
       - name: total_direct_energy_consumption
         address: 5102 # reg 5103
