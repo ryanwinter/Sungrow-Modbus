@@ -220,6 +220,32 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             if self._precision > 0 or self._scale != int(self._scale):
                 self._value_is_int = False
 
+        # outlier filtering parameters
+        self.threshold = 10  # Z-score threshold for outlier detection
+        self.alpha = 0.2  # Smoothing factor for Exponential Moving Average
+        self.mean = None
+        self.variance = 0.0
+
+    def __filter_value(self, val):
+        if self.mean == None:
+            self.mean = val
+            return val
+
+        std_dev = self.variance ** 0.5
+
+        # Evaluate before updating statistics
+        if std_dev > 0:
+            z_score = abs(val - self.mean) / std_dev
+            if z_score > self.threshold:
+                return None  # Outlier filtered out
+
+        # Update running Exponential Moving Mean and Variance
+        diff = val - self.mean
+        self.mean += self.alpha * diff
+        self.variance = (1 - self.alpha) * (self.variance + self.alpha * diff**2)
+
+        return val
+
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""
         if slave_count:
@@ -252,6 +278,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             # NaN float detection replace with None
             return None
         val: float | int = self._scale * entry + self._offset
+        # Filter outliers
+        val = self.__filter_value(val)
         if self._min_value is not None and val < self._min_value:
             val = self._min_value
         if self._max_value is not None and val > self._max_value:

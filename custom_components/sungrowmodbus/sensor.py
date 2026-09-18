@@ -1,9 +1,6 @@
 """Support for Modbus Register sensors."""
 
-from __future__ import annotations
-
-import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -13,6 +10,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_SENSORS,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -26,11 +24,16 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import get_hub
-from .const import CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
-from .entity import BaseStructPlatform
+from .const import (
+    CONF_SCALE,
+    CONF_SLAVE_COUNT,
+    CONF_VIRTUAL_COUNT,
+    DEFAULT_OFFSET,
+    DEFAULT_SCALE,
+    LOGGER,
+)
+from .entity import ModbusStructEntity
 from .modbus import ModbusHub
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -59,7 +62,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
+class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
     """Modbus register sensor."""
 
     def __init__(
@@ -76,16 +79,15 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         self._coordinator: DataUpdateCoordinator[list[float | None] | None] | None = (
             None
         )
+        self._scale = entry.get(CONF_SCALE, DEFAULT_SCALE)
+        self._offset = entry.get(CONF_OFFSET, DEFAULT_OFFSET)
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
-
-        # outlier filtering parameters
-        self.threshold = 3  # Z-score threshold for outlier detection
-        self.alpha = 0.1  # Smoothing factor for Exponential Moving Average
-        self.mean = None
-        self.variance = 0.0
-
+        if self._precision > 0 or self._scale != int(self._scale):
+            self._value_is_int = False
+        if self._precision > 0 and self._data_type not in ["string", "custom"]:
+            self._attr_suggested_display_precision = self._precision
 
     async def async_setup_slaves(
         self, hass: HomeAssistant, slave_count: int, entry: dict[str, Any]
@@ -95,10 +97,10 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         # Add a dataCoordinator for each sensor that have slaves
         # this ensures that idx = bit position of value in result
         # polling is done with the base class
-        name = self._attr_name if self._attr_name else "modbus_sensor"
+        name = self._attr_name or "modbus_sensor"
         self._coordinator = DataUpdateCoordinator(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=None,
             name=name,
         )
@@ -107,6 +109,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
             SlaveSensor(self._coordinator, idx, entry) for idx in range(slave_count)
         ]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
@@ -114,24 +117,23 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         if state:
             self._attr_native_value = state.native_value
 
+    @override
     async def _async_update(self) -> None:
         """Update the state of the sensor."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
-        self._cancel_call = None
         raw_result = await self._hub.async_pb_call(
-            self._slave, self._address, self._count, self._input_type
+            self._device_address, self._address, self._count, self._input_type
         )
         if raw_result is None:
-            #self._attr_available = False
-            #self._attr_native_value = None
-            #if self._coordinator:
-            #    self._coordinator.async_set_updated_data(None)
-            #self.async_write_ha_state()
+            self._attr_available = False
+            self._attr_native_value = None
+            if self._coordinator:
+                self._coordinator.async_set_updated_data(None)
+            self.async_write_ha_state()
             return
         self._attr_available = True
-        result = self.unpack_structure_result(raw_result.registers)
-        result = filter_stream(result)
+        result = self.unpack_structure_result(
+            raw_result.registers, self._scale, self._offset
+        )
         if self._coordinator:
             result_array: list[float | None] = []
             if result:
@@ -153,25 +155,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
             self._attr_native_value = result
         self.async_write_ha_state()
 
-    def filter_stream(self, val):
-        if self.mean == None:
-            self.mean = val
-            return val
-
-        std_dev = self.variance ** 0.5
-
-        # Evaluate before updating statistics
-        if std_dev > 0:
-            z_score = abs(val - self.mean) / std_dev
-            if z_score > self.threshold:
-                return None  # Outlier filtered out
-
-        # Update running Exponential Moving Mean and Variance
-        diff = val - self.mean
-        self.mean += self.alpha * diff
-        self.variance = (1 - self.alpha) * (self.variance + self.alpha * diff**2)
-
-        return val
 
 class SlaveSensor(
     CoordinatorEntity[DataUpdateCoordinator[list[float | None] | None]],
@@ -181,6 +164,7 @@ class SlaveSensor(
     """Modbus slave register sensor."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_available
@@ -204,6 +188,7 @@ class SlaveSensor(
         self._attr_available = False
         super().__init__(coordinator)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if state := await self.async_get_last_state():
@@ -211,9 +196,14 @@ class SlaveSensor(
         await super().async_added_to_hass()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        self._attr_native_value = result[self._idx] if result else None
-        self._attr_available = result is not None
+        if not result or self._idx >= len(result):
+            self._attr_native_value = None
+            self._attr_available = False
+        else:
+            self._attr_native_value = result[self._idx]
+            self._attr_available = True
         super()._handle_coordinator_update()
